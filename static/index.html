@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FaceVerify Pro — Biometric ID Authentication</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f6fb;--surface:#ffffff;--card:#ffffff;--card2:#f3f7fc;
+  --border:#d8e1ee;--border2:#c6d2e3;
+  --cyan:#1276c2;--cyan-dim:rgba(18,118,194,0.1);
+  --green:#10956e;--green-dim:rgba(16,149,110,0.1);
+  --red:#d63a4f;--red-dim:rgba(214,58,79,0.1);
+  --text:#162235;--text2:#4c607a;--text3:#7588a1;
+  --panel-shadow:0 10px 28px rgba(16,40,74,0.08);
+  --noise-opacity:.15;
+  --verify-grad-a:#1565a6;
+  --verify-grad-b:#13896b;
+  --ff:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:14px;--r-sm:8px;
+}
+html[data-theme='dark']{
+  --bg:#02040a;--surface:#080d16;--card:#0c1422;--card2:#101929;
+  --border:#172030;--border2:#1e2d42;
+  --cyan:#00d4ff;--cyan-dim:rgba(0,212,255,0.12);
+  --green:#00f5a0;--green-dim:rgba(0,245,160,0.1);
+  --red:#ff4560;--red-dim:rgba(255,69,96,0.1);
+  --text:#dde8f5;--text2:#8ea0b8;--text3:#4a5e75;
+  --panel-shadow:0 12px 34px rgba(0,0,0,0.35);
+  --noise-opacity:.4;
+  --verify-grad-a:#0a4d6e;
+  --verify-grad-b:#0d6b4f;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--ff);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:var(--noise-opacity)}
+.glow-1{position:fixed;top:-20%;right:-10%;width:50vw;height:50vw;background:radial-gradient(ellipse,rgba(0,212,255,0.05) 0%,transparent 65%);pointer-events:none;z-index:0}
+.glow-2{position:fixed;bottom:-20%;left:-10%;width:40vw;height:40vw;background:radial-gradient(ellipse,rgba(0,245,160,0.04) 0%,transparent 65%);pointer-events:none;z-index:0}
+.page{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:32px 20px 80px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:34px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(0,245,160,0.08));border:1px solid rgba(0,212,255,0.3);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,212,255,0.15)}
+.brand-name{font-size:1.1rem;font-weight:800;letter-spacing:-0.3px}
+.brand-name span{color:var(--cyan)}
+.brand-tag{font-size:.6rem;font-family:var(--mono);color:var(--text3);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.status-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;background:var(--surface);border:1px solid var(--border2);font-size:.68rem;font-family:var(--mono);color:var(--text2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-dot 2s ease-in-out infinite}
+.theme-toggle{padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--surface);font-family:var(--mono);font-size:.68rem;color:var(--text2);display:flex;align-items:center;gap:7px;cursor:pointer;transition:all .18s}
+.theme-toggle:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+.hero{margin-bottom:34px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.65rem;font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px;padding:5px 12px;border:1px solid rgba(0,212,255,0.2);border-radius:20px;background:rgba(0,212,255,0.05)}
+.hero h1{font-size:clamp(2.2rem,5vw,4rem);font-weight:900;letter-spacing:-2px;line-height:1.0;margin-bottom:16px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--cyan) 0%,var(--green) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:.9rem;color:var(--text2);max-width:520px;line-height:1.65;font-weight:400}
+.steps-row{display:flex;align-items:center;gap:0;margin-bottom:30px;overflow-x:auto;padding-bottom:4px}
+.step-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:var(--r-sm);font-size:.72rem;font-family:var(--mono);color:var(--text3);white-space:nowrap;transition:all .2s;flex-shrink:0}
+.step-item.active{color:var(--cyan);background:var(--cyan-dim)}
+.step-item.done{color:var(--green);background:var(--green-dim)}
+.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;border:1.5px solid currentColor;flex-shrink:0}
+.step-divider{flex:1;height:1px;background:var(--border);min-width:20px;max-width:40px;flex-shrink:0}
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-num{width:28px;height:28px;border-radius:7px;background:var(--cyan-dim);border:1px solid rgba(0,212,255,0.25);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-family:var(--mono);color:var(--cyan);font-weight:700}
+.section-head h2{font-size:1rem;font-weight:700;letter-spacing:-.2px}
+.section-head p{font-size:.75rem;color:var(--text2);margin-top:2px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .25s;box-shadow:var(--panel-shadow)}
+.card.complete{border-color:rgba(0,245,160,0.3)}
+.id-section{margin-bottom:34px}
+.id-modes{display:flex;gap:2px;padding:4px;background:var(--surface);border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:20px;width:fit-content}
+.mode-btn{padding:8px 20px;border-radius:6px;border:none;background:transparent;font-family:var(--ff);font-size:.78rem;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:7px}
+.mode-btn svg{width:14px;height:14px;flex-shrink:0}
+.mode-btn.active{background:var(--card2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.id-upload-area{display:none;padding:28px;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;position:relative;text-align:center;gap:12px}
+.id-upload-area.visible{display:flex}
+.id-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.upload-icon{width:56px;height:56px;border-radius:12px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.02);transition:all .2s}
+.id-upload-area:hover .upload-icon{border-color:var(--cyan);background:var(--cyan-dim)}
+.upload-title{font-size:.85rem;font-weight:600}
+.upload-hint{font-size:.72rem;color:var(--text3);font-family:var(--mono)}
+.preview-thumb{width:100%;max-height:220px;object-fit:contain;display:none;border-radius:var(--r-sm);background:#000}
+.preview-thumb.show{display:block}
+.cam-wrap{position:relative;background:#000;border-radius:var(--r-sm);overflow:hidden;height:220px;display:flex;align-items:center;justify-content:center}
+.cam-wrap video,.cam-wrap img.snap{width:100%;height:220px;object-fit:cover;display:none}
+.cam-wrap img.snap.show,.cam-wrap video.show{display:block}
+.cam-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--text3);font-size:.75rem;font-family:var(--mono)}
+.cam-controls{display:flex;gap:8px;padding:14px 16px 16px}
+.btn-ghost{flex:1;padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;font-family:var(--ff);font-size:.72rem;font-weight:500;color:var(--text2);cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-ghost svg{flex-shrink:0}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim)}
+.btn-ghost:disabled{opacity:.3;cursor:not-allowed;pointer-events:none}
+.btn-ghost.on{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.liveness-section{margin-bottom:34px}
+.liveness-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:600px){.liveness-grid{grid-template-columns:1fr}}
+.angle-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.angle-card.captured{border-color:rgba(0,245,160,0.35);background:rgba(0,245,160,0.02)}
+.angle-header{padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+.angle-icon{width:30px;height:30px;border-radius:7px;background:var(--card2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center}
+.angle-label{font-size:.8rem;font-weight:600}
+.angle-desc{font-size:.65rem;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.angle-badge{margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--border2);display:flex;align-items:center;justify-content:center;transition:all .2s}
+.angle-card.captured .angle-badge{background:var(--green);box-shadow:0 0 10px rgba(0,245,160,0.4)}
+.angle-body{padding:12px 14px 14px}
+.angle-cam-wrap{position:relative;background:#000;border-radius:var(--r-sm);overflow:hidden;height:150px;display:flex;align-items:center;justify-content:center}
+.angle-cam-wrap video,.angle-cam-wrap img.snap{width:100%;height:150px;object-fit:cover;display:none}
+.angle-cam-wrap img.snap.show,.angle-cam-wrap video.show{display:block}
+.angle-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text3);font-size:.65rem;font-family:var(--mono);text-align:center;padding:8px}
+.face-guide{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center}
+.face-oval{width:70px;height:90px;border:2px dashed rgba(0,212,255,0.4);border-radius:50%;opacity:.7}
+.angle-btns{display:flex;gap:6px;margin-top:10px}
+.angle-btns .btn-ghost{font-size:.67rem;padding:7px 10px}
+.liveness-progress{margin-top:20px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);display:flex;align-items:center;gap:16px}
+.prog-bar-wrap{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .4s ease;width:0%}
+.prog-text{font-size:.7rem;font-family:var(--mono);color:var(--text2);white-space:nowrap}
+.prog-count{color:var(--cyan);font-weight:500}
+.verify-section{margin-bottom:34px}
+.btn-verify{width:100%;padding:18px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--verify-grad-a),var(--verify-grad-b));position:relative;overflow:hidden;cursor:pointer;font-family:var(--ff);font-size:1rem;font-weight:700;color:#fff;letter-spacing:-.2px;transition:opacity .2s,transform .1s;box-shadow:0 0 34px rgba(0,212,255,0.15),inset 0 1px 0 rgba(255,255,255,.08)}
+.btn-verify::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,212,255,0.2),rgba(0,245,160,0.15));opacity:0;transition:opacity .2s}
+.btn-verify:hover::before{opacity:1}
+.btn-verify:hover{transform:translateY(-1px)}
+.btn-verify:active{transform:translateY(0)}
+.btn-verify:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.btn-verify:disabled::before{display:none}
+.btn-verify .inner{display:flex;align-items:center;justify-content:center;gap:10px;position:relative}
+.btn-verify .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none}
+.btn-verify.loading .spinner{display:block}
+.btn-verify.loading .v-label{display:none}
+.btn-verify.loading .v-icon{display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.verify-note{text-align:center;margin-top:12px;font-size:.68rem;font-family:var(--mono);color:var(--text3)}
+.error-box{display:none;padding:16px 20px;margin-bottom:28px;border:1px solid var(--red);border-radius:var(--r);background:var(--red-dim);align-items:center;gap:10px;font-size:.8rem;font-family:var(--mono);color:var(--red);line-height:1.6}
+.error-box.show{display:flex}
+.result-panel{display:none;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+.result-panel.show{display:block;animation:fadeUp .4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.result-header{padding:32px 32px 28px;display:flex;align-items:flex-start;gap:20px}
+.result-header.match{background:linear-gradient(135deg,rgba(0,245,160,0.06),rgba(0,212,255,0.04));border-bottom:1px solid rgba(0,245,160,0.15)}
+.result-header.no-match{background:linear-gradient(135deg,rgba(255,69,96,0.06),rgba(255,69,96,0.02));border-bottom:1px solid rgba(255,69,96,0.15)}
+.result-icon-wrap{width:60px;height:60px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.result-icon-wrap.match{background:rgba(0,245,160,0.12);border:1.5px solid rgba(0,245,160,0.35)}
+.result-icon-wrap.no-match{background:rgba(255,69,96,0.12);border:1.5px solid rgba(255,69,96,0.35)}
+.result-title{font-size:1.6rem;font-weight:900;letter-spacing:-.6px;line-height:1}
+.result-title.match{color:var(--green)}
+.result-title.no-match{color:var(--red)}
+.result-caption{font-size:.8rem;color:var(--text2);margin-top:6px;line-height:1.5}
+.result-meta{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.meta-chip{padding:4px 10px;border-radius:20px;font-size:.62rem;font-family:var(--mono);background:var(--surface);border:1px solid var(--border2);color:var(--text3);display:flex;align-items:center;gap:5px}
+.meta-chip.ok{border-color:rgba(0,245,160,0.2);color:var(--green)}
+.result-body{padding:24px 32px 32px;background:var(--card)}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+@media(max-width:600px){.metrics-grid{grid-template-columns:1fr 1fr}}
+.metric-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px}
+.metric-label{font-size:.58rem;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.metric-value{font-size:1.35rem;font-weight:800;letter-spacing:-.5px}
+.metric-value.good{color:var(--green)}
+.metric-value.bad{color:var(--red)}
+.metric-value.neutral{color:var(--cyan)}
+.conf-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.conf-label{font-size:.72rem;font-family:var(--mono);color:var(--text2)}
+.conf-pct{font-size:.8rem;font-family:var(--mono);font-weight:600}
+.conf-pct.good{color:var(--green)}.conf-pct.bad{color:var(--red)}
+.conf-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.conf-fill{height:100%;border-radius:4px;transition:width 1s cubic-bezier(.16,1,.3,1);width:0%}
+.conf-fill.good{background:linear-gradient(90deg,#006644,var(--green))}
+.conf-fill.bad{background:linear-gradient(90deg,#660020,var(--red))}
+.conf-ticks{display:flex;justify-content:space-between;margin-top:6px}
+.conf-tick{font-size:.58rem;font-family:var(--mono);color:var(--text3)}
+footer{margin-top:54px;padding-top:20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:.65rem;font-family:var(--mono);color:var(--text3)}
+.footer-pills{display:flex;gap:8px;flex-wrap:wrap}
+.footer-pill{padding:4px 10px;border:1px solid var(--border);border-radius:20px;background:var(--surface)}
+.footer-pill span{color:var(--cyan)}
+@media(max-width:700px){
+  .status-pill{display:none}
+  .hero-eyebrow{display:none}
+  .hero h1{letter-spacing:-1.3px}
+}
+@media(max-width:900px){
+  .page{padding:24px 16px 64px}
+  .topbar{margin-bottom:24px}
+  .hero{margin-bottom:24px}
+  .hero h1{font-size:clamp(1.8rem,7vw,2.6rem);margin-bottom:10px}
+  .hero-sub{font-size:.84rem;line-height:1.55}
+  .steps-row{margin-bottom:22px}
+  .section-head{margin-bottom:14px}
+  .section-head h2{font-size:.92rem}
+  .section-head p{font-size:.72rem;line-height:1.4}
+  .id-section,.liveness-section,.verify-section{margin-bottom:24px}
+  .liveness-grid{grid-template-columns:1fr;gap:12px}
+  .angle-body{padding:10px 12px 12px}
+  .angle-cam-wrap{height:136px}
+  .angle-cam-wrap video,.angle-cam-wrap img.snap{height:136px}
+  .btn-verify{padding:14px;font-size:.92rem}
+  .verify-note{font-size:.64rem}
+  .result-header{padding:20px 18px 18px;gap:14px}
+  .result-title{font-size:1.2rem}
+  .result-caption{font-size:.75rem}
+  .result-body{padding:16px 18px 18px}
+}
+@media(max-width:560px){
+  .brand-icon{width:34px;height:34px}
+  .brand-name{font-size:1rem}
+  .brand-tag{display:none}
+  .theme-toggle{padding:6px 10px;font-size:.64rem}
+  .mode-btn{padding:7px 12px;font-size:.72rem}
+  .id-upload-area{padding:20px;min-height:170px}
+  .upload-title{font-size:.78rem}
+  .upload-hint{font-size:.64rem}
+  .cam-wrap{height:190px}
+  .cam-wrap video,.cam-wrap img.snap{height:190px}
+  .cam-controls{padding:10px 12px 12px;gap:6px}
+  .btn-ghost{padding:8px 10px;font-size:.68rem}
+  .liveness-progress{padding:12px 14px;gap:10px}
+  .prog-text{font-size:.62rem}
+  .metrics-grid{grid-template-columns:1fr;gap:10px}
+  footer{margin-top:34px;padding-top:16px}
+}
+</style>
+</head>
+<body>
+<div class="glow-1"></div><div class="glow-2"></div>
+
+<!-- Reusable SVG symbol library -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="ic-user" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+  <symbol id="ic-camera" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="ic-upload" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></symbol>
+  <symbol id="ic-id" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><line x1="14" y1="9" x2="18" y2="9"/><line x1="14" y1="13" x2="18" y2="13"/></symbol>
+  <symbol id="ic-capture" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 9V6a1 1 0 0 1 1-1h3M3 15v3a1 1 0 0 0 1 1h3M21 9V6a1 1 0 0 0-1-1h-3M21 15v3a1 1 0 0 1-1 1h-3"/></symbol>
+  <symbol id="ic-stop" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></symbol>
+  <symbol id="ic-retake" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="ic-alert" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+  <symbol id="ic-turn-left" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></symbol>
+  <symbol id="ic-turn-right" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></symbol>
+  <symbol id="ic-server" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3c.32 0 .64.02.95.05A7 7 0 0 0 21 12.79z"/></symbol>
+</svg>
+
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="20" height="20" stroke="var(--cyan)"><use href="#ic-user"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">Face<span>Verify</span> Pro</div>
+        <div class="brand-tag">Biometric Authentication System</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        System Ready
+      </div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+        <svg width="13" height="13" stroke="currentColor"><use id="theme-icon-use" href="#ic-moon"/></svg>
+        <span id="theme-label">Dark</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h1>Secure <em>Identity Verification</em></h1>
+    <p class="hero-sub">Upload or capture an ID card, complete three liveness angles, and verify in one simple flow.</p>
+  </div>
+
+  <div class="steps-row">
+    <div class="step-item active" id="step1"><div class="step-num">1</div>ID Card</div>
+    <div class="step-divider"></div>
+    <div class="step-item" id="step2"><div class="step-num">2</div>Liveness Check</div>
+    <div class="step-divider"></div>
+    <div class="step-item" id="step3"><div class="step-num">3</div>Verify Identity</div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="id-section">
+    <div class="section-head">
+      <div class="section-num">01</div>
+      <div><h2>National ID Card</h2><p>Upload a photo or capture the ID card with your camera</p></div>
+    </div>
+    <div class="id-modes">
+      <button class="mode-btn active" id="mode-upload">
+        <svg width="14" height="14" stroke="currentColor"><use href="#ic-upload"/></svg> Upload File
+      </button>
+      <button class="mode-btn" id="mode-camera">
+        <svg width="14" height="14" stroke="currentColor"><use href="#ic-camera"/></svg> Use Camera
+      </button>
+    </div>
+    <div class="card" id="id-card-wrap">
+      <div class="id-upload-area visible" id="id-upload-zone">
+        <input type="file" id="id-file-input" accept="image/*"/>
+        <div class="upload-icon">
+          <svg width="26" height="26" stroke="var(--text3)"><use href="#ic-id"/></svg>
+        </div>
+        <div>
+          <div class="upload-title">Drop ID card photo here</div>
+          <div class="upload-hint">or click to browse · JPEG, PNG, WebP</div>
+        </div>
+        <img class="preview-thumb" id="id-preview" alt="ID preview"/>
+      </div>
+      <div style="display:none" id="id-cam-section">
+        <div class="cam-wrap">
+          <div class="cam-placeholder" id="id-cam-placeholder">
+            <svg width="28" height="28" stroke="var(--text3)"><use href="#ic-camera"/></svg>
+            Camera not started
+          </div>
+          <video id="id-video" playsinline muted autoplay></video>
+          <canvas id="id-canvas" style="display:none"></canvas>
+          <img class="snap" id="id-snap" alt="ID snap"/>
+        </div>
+        <div class="cam-controls">
+          <button class="btn-ghost" id="id-cam-start"><svg width="13" height="13" stroke="currentColor"><use href="#ic-camera"/></svg> Start Camera</button>
+          <button class="btn-ghost" id="id-cam-capture" disabled><svg width="13" height="13" stroke="currentColor"><use href="#ic-capture"/></svg> Capture</button>
+          <button class="btn-ghost" id="id-cam-retake" disabled><svg width="13" height="13" stroke="currentColor"><use href="#ic-retake"/></svg> Retake</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="liveness-section">
+    <div class="section-head">
+      <div class="section-num">02</div>
+      <div><h2>3-Angle Liveness Check</h2><p>Capture all three angles. The <strong>front photo</strong> is used for identity matching.</p></div>
+    </div>
+    <div class="liveness-grid">
+
+      <div class="angle-card" id="card-left">
+        <div class="angle-header">
+          <div class="angle-icon"><svg width="16" height="16" stroke="var(--text2)"><use href="#ic-turn-left"/></svg></div>
+          <div><div class="angle-label">Left Side</div><div class="angle-desc">Turn head left ~45°</div></div>
+          <div class="angle-badge" id="badge-left"><svg width="10" height="10" stroke="var(--text3)"><use href="#ic-x"/></svg></div>
+        </div>
+        <div class="angle-body">
+          <div class="angle-cam-wrap">
+            <div class="angle-placeholder" id="ph-left"><svg width="22" height="22" stroke="var(--text3)"><use href="#ic-user"/></svg>Ready to capture</div>
+            <div class="face-guide" id="guide-left" style="display:none"><div class="face-oval"></div></div>
+            <video id="vid-left" playsinline muted autoplay></video>
+            <img class="snap" id="snap-left" alt="Left"/>
+          </div>
+          <div class="angle-btns">
+            <button class="btn-ghost" id="btn-start-left"><svg width="13" height="13" stroke="currentColor"><use href="#ic-camera"/></svg> Camera</button>
+            <button class="btn-ghost" id="btn-cap-left" disabled><svg width="13" height="13" stroke="currentColor"><use href="#ic-capture"/></svg> Capture</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="angle-card" id="card-front">
+        <div class="angle-header">
+          <div class="angle-icon"><svg width="16" height="16" stroke="var(--text2)"><use href="#ic-user"/></svg></div>
+          <div><div class="angle-label">Front — Face Match</div><div class="angle-desc">Look straight at camera</div></div>
+          <div class="angle-badge" id="badge-front"><svg width="10" height="10" stroke="var(--text3)"><use href="#ic-x"/></svg></div>
+        </div>
+        <div class="angle-body">
+          <div class="angle-cam-wrap">
+            <div class="angle-placeholder" id="ph-front"><svg width="22" height="22" stroke="var(--text3)"><use href="#ic-user"/></svg>Used for ID matching</div>
+            <div class="face-guide" id="guide-front" style="display:none"><div class="face-oval"></div></div>
+            <video id="vid-front" playsinline muted autoplay></video>
+            <img class="snap" id="snap-front" alt="Front"/>
+          </div>
+          <div class="angle-btns">
+            <button class="btn-ghost" id="btn-start-front"><svg width="13" height="13" stroke="currentColor"><use href="#ic-camera"/></svg> Camera</button>
+            <button class="btn-ghost" id="btn-cap-front" disabled><svg width="13" height="13" stroke="currentColor"><use href="#ic-capture"/></svg> Capture</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="angle-card" id="card-right">
+        <div class="angle-header">
+          <div class="angle-icon"><svg width="16" height="16" stroke="var(--text2)"><use href="#ic-turn-right"/></svg></div>
+          <div><div class="angle-label">Right Side</div><div class="angle-desc">Turn head right ~45°</div></div>
+          <div class="angle-badge" id="badge-right"><svg width="10" height="10" stroke="var(--text3)"><use href="#ic-x"/></svg></div>
+        </div>
+        <div class="angle-body">
+          <div class="angle-cam-wrap">
+            <div class="angle-placeholder" id="ph-right"><svg width="22" height="22" stroke="var(--text3)"><use href="#ic-user"/></svg>Ready to capture</div>
+            <div class="face-guide" id="guide-right" style="display:none"><div class="face-oval"></div></div>
+            <video id="vid-right" playsinline muted autoplay></video>
+            <img class="snap" id="snap-right" alt="Right"/>
+          </div>
+          <div class="angle-btns">
+            <button class="btn-ghost" id="btn-start-right"><svg width="13" height="13" stroke="currentColor"><use href="#ic-camera"/></svg> Camera</button>
+            <button class="btn-ghost" id="btn-cap-right" disabled><svg width="13" height="13" stroke="currentColor"><use href="#ic-capture"/></svg> Capture</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="liveness-progress">
+      <svg width="16" height="16" stroke="var(--cyan)"><use href="#ic-shield"/></svg>
+      <div class="prog-bar-wrap"><div class="prog-bar-fill" id="prog-fill"></div></div>
+      <div class="prog-text">Liveness: <span class="prog-count" id="prog-count">0 / 3</span> angles captured</div>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="error-box" id="error-box">
+    <svg width="16" height="16" stroke="var(--red)"><use href="#ic-alert"/></svg>
+    <span id="error-text"></span>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="verify-section">
+    <div class="section-head">
+      <div class="section-num">03</div>
+      <div><h2>Run Identity Verification</h2><p>All three liveness angles and ID card are required to proceed</p></div>
+    </div>
+    <button class="btn-verify" id="btn-verify" disabled>
+      <div class="inner">
+        <div class="spinner"></div>
+        <svg class="v-icon" width="18" height="18" stroke="#fff"><use href="#ic-lock"/></svg>
+        <span class="v-label">Verify Identity</span>
+      </div>
+    </button>
+    <div class="verify-note">Images are processed on your local server. No data leaves your machine.</div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-panel" id="result-panel">
+    <div class="result-header" id="result-header">
+      <div class="result-icon-wrap" id="result-icon-wrap">
+        <svg id="result-svg" width="28" height="28"><use id="result-icon-use" href="#ic-check"/></svg>
+      </div>
+      <div>
+        <div class="result-title" id="result-title"></div>
+        <div class="result-caption" id="result-caption"></div>
+        <div class="result-meta">
+          <div class="meta-chip ok"><svg width="10" height="10" stroke="currentColor"><use href="#ic-check"/></svg> Liveness Passed</div>
+          <div class="meta-chip ok"><svg width="10" height="10" stroke="currentColor"><use href="#ic-check"/></svg> 3 Angles Verified</div>
+          <div class="meta-chip"><svg width="10" height="10" stroke="currentColor"><use href="#ic-server"/></svg> ArcFace · RetinaFace</div>
+        </div>
+      </div>
+    </div>
+    <div class="result-body">
+      <div class="metrics-grid">
+        <div class="metric-box"><div class="metric-label">Verdict</div><div class="metric-value" id="m-verdict">—</div></div>
+        <div class="metric-box"><div class="metric-label">Distance</div><div class="metric-value neutral" id="m-distance">—</div></div>
+        <div class="metric-box"><div class="metric-label">Threshold</div><div class="metric-value neutral" id="m-threshold">—</div></div>
+        <div class="metric-box"><div class="metric-label">Confidence</div><div class="metric-value" id="m-confidence">—</div></div>
+      </div>
+      <div>
+        <div class="conf-header">
+          <div class="conf-label">Match Confidence</div>
+          <div class="conf-pct" id="conf-pct">0%</div>
+        </div>
+        <div class="conf-track"><div class="conf-fill" id="conf-fill"></div></div>
+        <div class="conf-ticks">
+          <span class="conf-tick">0%</span><span class="conf-tick">25%</span>
+          <span class="conf-tick">50%</span><span class="conf-tick">75%</span><span class="conf-tick">100%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-pills">
+      <div class="footer-pill">Model: <span>ArcFace</span></div>
+      <div class="footer-pill">Detector: <span>RetinaFace</span></div>
+    </div>
+    <div>FaceVerify Pro v2.1</div>
+  </footer>
+</div>
+
+<script>
+const state={idFile:null,idMode:'upload',idCamStream:null,angles:{left:null,front:null,right:null},camStreams:{left:null,front:null,right:null}};
+
+const themeKey='faceverify-theme';
+const root=document.documentElement;
+const themeLabel=document.getElementById('theme-label');
+const themeIconUse=document.getElementById('theme-icon-use');
+function applyTheme(theme){
+  root.setAttribute('data-theme',theme);
+  themeLabel.textContent=theme==='dark'?'Dark':'Light';
+  themeIconUse.setAttribute('href',theme==='dark'?'#ic-moon':'#ic-sun');
+}
+const storedTheme=localStorage.getItem(themeKey);
+const initialTheme=storedTheme||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+applyTheme(initialTheme);
+document.getElementById('theme-toggle').addEventListener('click',()=>{
+  const nextTheme=root.getAttribute('data-theme')==='dark'?'light':'dark';
+  applyTheme(nextTheme);
+  localStorage.setItem(themeKey,nextTheme);
+});
+
+document.getElementById('mode-upload').addEventListener('click',()=>switchIdMode('upload'));
+document.getElementById('mode-camera').addEventListener('click',()=>switchIdMode('camera'));
+function switchIdMode(m){
+  state.idMode=m;
+  document.getElementById('mode-upload').classList.toggle('active',m==='upload');
+  document.getElementById('mode-camera').classList.toggle('active',m==='camera');
+  document.getElementById('id-upload-zone').classList.toggle('visible',m==='upload');
+  document.getElementById('id-cam-section').style.display=m==='camera'?'block':'none';
+  if(m==='upload')stopIdCam();
+}
+
+document.getElementById('id-file-input').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  state.idFile=f;
+  const p=document.getElementById('id-preview');
+  p.src=URL.createObjectURL(f);p.classList.add('show');
+  document.getElementById('id-upload-zone').querySelector('.upload-icon').style.display='none';
+  document.getElementById('id-upload-zone').querySelector('.upload-title').textContent=f.name;
+  document.getElementById('id-upload-zone').querySelector('.upload-hint').textContent='Click to change';
+  document.getElementById('id-card-wrap').classList.add('complete');
+  checkReady();updateSteps();
+});
+
+const idVideo=document.getElementById('id-video'),idCanvas=document.getElementById('id-canvas'),idSnap=document.getElementById('id-snap');
+document.getElementById('id-cam-start').addEventListener('click',async()=>{
+  if(state.idCamStream){stopIdCam();return;}
+  try{
+    state.idCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    idVideo.srcObject=state.idCamStream;idVideo.classList.add('show');
+    document.getElementById('id-cam-placeholder').style.display='none';
+    document.getElementById('id-cam-start').classList.add('on');
+    document.getElementById('id-cam-capture').disabled=false;
+  }catch{showError('Camera access denied.');}
+});
+document.getElementById('id-cam-capture').addEventListener('click',()=>{
+  idCanvas.width=idVideo.videoWidth;idCanvas.height=idVideo.videoHeight;
+  idCanvas.getContext('2d').drawImage(idVideo,0,0);
+  idCanvas.toBlob(blob=>{
+    state.idFile=new File([blob],'id_capture.jpg',{type:'image/jpeg'});
+    idSnap.src=URL.createObjectURL(blob);idSnap.classList.add('show');
+    idVideo.classList.remove('show');stopIdCam();
+    document.getElementById('id-cam-retake').disabled=false;
+    document.getElementById('id-cam-capture').disabled=true;
+    document.getElementById('id-card-wrap').classList.add('complete');
+    checkReady();updateSteps();
+  },'image/jpeg',0.92);
+});
+document.getElementById('id-cam-retake').addEventListener('click',()=>{
+  state.idFile=null;idSnap.classList.remove('show');idSnap.src='';
+  document.getElementById('id-cam-placeholder').style.display='flex';
+  document.getElementById('id-cam-retake').disabled=true;
+  document.getElementById('id-card-wrap').classList.remove('complete');
+  checkReady();updateSteps();
+});
+function stopIdCam(){
+  if(state.idCamStream){state.idCamStream.getTracks().forEach(t=>t.stop());state.idCamStream=null;}
+  idVideo.classList.remove('show');
+  document.getElementById('id-cam-start').classList.remove('on');
+  document.getElementById('id-cam-capture').disabled=true;
+}
+
+['left','front','right'].forEach(angle=>{
+  const bStart=document.getElementById('btn-start-'+angle);
+  const bCap=document.getElementById('btn-cap-'+angle);
+  const vid=document.getElementById('vid-'+angle);
+  const snap=document.getElementById('snap-'+angle);
+  const ph=document.getElementById('ph-'+angle);
+  const guide=document.getElementById('guide-'+angle);
+  bStart.addEventListener('click',async()=>{
+    if(state.camStreams[angle]){stopAngleCam(angle);return;}
+    try{
+      const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}});
+      state.camStreams[angle]=s;vid.srcObject=s;vid.style.display='block';
+      ph.style.display='none';guide.style.display='flex';
+      bStart.classList.add('on');bCap.disabled=false;
+    }catch{showError('Camera access denied.');}
+  });
+  bCap.addEventListener('click',()=>{
+    const c=document.createElement('canvas');
+    c.width=vid.videoWidth;c.height=vid.videoHeight;
+    c.getContext('2d').drawImage(vid,0,0);
+    c.toBlob(blob=>{
+      state.angles[angle]=new File([blob],angle+'.jpg',{type:'image/jpeg'});
+      snap.src=URL.createObjectURL(blob);snap.classList.add('show');
+      vid.style.display='none';guide.style.display='none';
+      stopAngleCam(angle);
+      const badge=document.getElementById('badge-'+angle);
+      badge.innerHTML='<svg width="10" height="10" stroke="#000"><use href="#ic-check"/></svg>';
+      document.getElementById('card-'+angle).classList.add('captured');
+      updateProgress();checkReady();updateSteps();
+    },'image/jpeg',0.92);
+  });
+});
+
+function stopAngleCam(angle){
+  const s=state.camStreams[angle];
+  if(s){s.getTracks().forEach(t=>t.stop());state.camStreams[angle]=null;}
+  document.getElementById('vid-'+angle).style.display='none';
+  document.getElementById('guide-'+angle).style.display='none';
+  document.getElementById('btn-start-'+angle).classList.remove('on');
+  document.getElementById('btn-cap-'+angle).disabled=true;
+  if(!state.angles[angle])document.getElementById('ph-'+angle).style.display='flex';
+}
+
+function updateProgress(){
+  const done=['left','front','right'].filter(a=>state.angles[a]).length;
+  document.getElementById('prog-fill').style.width=(done/3*100)+'%';
+  document.getElementById('prog-count').textContent=done+' / 3';
+}
+function updateSteps(){
+  const hasId=!!state.idFile,hasAll=['left','front','right'].every(a=>!!state.angles[a]);
+  document.getElementById('step1').className='step-item '+(hasId?'done':'active');
+  document.getElementById('step2').className='step-item '+(hasAll?'done':hasId?'active':'');
+  document.getElementById('step3').className='step-item '+(hasId&&hasAll?'active':'');
+}
+function checkReady(){
+  document.getElementById('btn-verify').disabled=!(state.idFile&&['left','front','right'].every(a=>!!state.angles[a]));
+}
+
+document.getElementById('btn-verify').addEventListener('click',async()=>{
+  hideError();
+  document.getElementById('result-panel').classList.remove('show');
+  const btn=document.getElementById('btn-verify');
+  btn.classList.add('loading');btn.disabled=true;
+  const form=new FormData();
+  form.append('id_photo',state.idFile);
+  form.append('front_photo',state.angles.front);
+  form.append('left_photo',state.angles.left);
+  form.append('right_photo',state.angles.right);
+  try{
+    const res=await fetch('/verify',{method:'POST',body:form});
+    const data=await res.json();
+    if(!res.ok){showError(data.detail||'Verification failed.');return;}
+    renderResult(data);
+  }catch{showError('Cannot connect to server. Make sure FastAPI is running.');}
+  finally{btn.classList.remove('loading');btn.disabled=false;}
+});
+
+function renderResult(data){
+  const ok=data.verified,conf=Math.max(0,Math.min(100,data.confidence));
+  document.getElementById('result-header').className='result-header '+(ok?'match':'no-match');
+  document.getElementById('result-icon-wrap').className='result-icon-wrap '+(ok?'match':'no-match');
+  document.getElementById('result-svg').setAttribute('stroke',ok?'var(--green)':'var(--red)');
+  document.getElementById('result-icon-use').setAttribute('href',ok?'#ic-check':'#ic-x');
+  document.getElementById('result-title').className='result-title '+(ok?'match':'no-match');
+  document.getElementById('result-title').textContent=ok?'Identity Verified':'Identity Not Matched';
+  document.getElementById('result-caption').textContent=ok
+    ?'The person in front of the camera matches the ID card. All 3 liveness checks passed.'
+    :'The face does not match the ID card. This person could not be verified.';
+  document.getElementById('m-verdict').textContent=ok?'MATCH':'NO MATCH';
+  document.getElementById('m-verdict').className='metric-value '+(ok?'good':'bad');
+  document.getElementById('m-distance').textContent=data.distance;
+  document.getElementById('m-threshold').textContent=data.threshold;
+  document.getElementById('m-confidence').textContent=conf.toFixed(1)+'%';
+  document.getElementById('m-confidence').className='metric-value '+(ok?'good':'bad');
+  const fill=document.getElementById('conf-fill');
+  fill.className='conf-fill '+(ok?'good':'bad');
+  document.getElementById('conf-pct').className='conf-pct '+(ok?'good':'bad');
+  setTimeout(()=>{fill.style.width=conf+'%';document.getElementById('conf-pct').textContent=conf.toFixed(0)+'%';},100);
+  document.getElementById('result-panel').classList.add('show');
+  document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
+  document.getElementById('step3').className='step-item done';
+}
+
+function showError(msg){
+  document.getElementById('error-text').textContent=msg;
+  document.getElementById('error-box').classList.add('show');
+  document.getElementById('error-box').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function hideError(){document.getElementById('error-box').classList.remove('show');}
+</script>
+</body>
+</html>
