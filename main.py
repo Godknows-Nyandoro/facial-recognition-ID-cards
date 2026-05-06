@@ -101,16 +101,29 @@ async def verify_faces(
             detector_backend="retinaface",
             enforce_detection=True,
             align=True,
+            distance_metric="cosine",
         )
 
-        # Compute a clean confidence score (0–100%)
-        raw_conf = (1 - result["distance"] / result["threshold"]) * 100
-        confidence = round(max(0.0, min(100.0, raw_conf)), 1)
+        # Keep verification strict, but not so strict that valid matches are rejected.
+        # ArcFace's default threshold can be too permissive, while 0.50 was too harsh.
+        STRICT_THRESHOLD = 0.58
+
+        distance = result["distance"]
+
+        # Use the actual distance threshold for the decision.
+        # The confidence value is informational only and should not block valid matches.
+        is_verified = distance <= STRICT_THRESHOLD
+
+        if is_verified:
+            confidence_score = 1.0 - (distance / STRICT_THRESHOLD)
+            confidence = round(max(0.0, min(100.0, confidence_score * 100)), 1)
+        else:
+            confidence = 0.0
 
         return {
-            "verified": result["verified"],
-            "distance": round(result["distance"], 4),
-            "threshold": round(result["threshold"], 4),
+            "verified": is_verified,
+            "distance": round(distance, 4),
+            "threshold": round(STRICT_THRESHOLD, 4),
             "confidence": confidence,
             "liveness_passed": True,
             "angles_verified": ["front", "left", "right"],
